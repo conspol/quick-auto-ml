@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__
+data/*
+!data/test_data.xlsx
+quick_auto_ml/conf/_private_config.yaml
+/*.png
+run.py
+/outputs

@@ -2,6 +2,7 @@ from typing import Union, List
 import pandas as pd
 import numpy as np
 from loguru import logger as lg
+from ..quick_auto_ml.defines import CLASS_LABEL
 
 
 def process_num_df_to_binaryclass(
@@ -45,8 +46,8 @@ def process_num_df_to_binaryclass(
     if drop_null_label_samples:
         data=data[~(data[label_column].isnull())]
 
-    data['class_label']='N'
-    data.loc[data[label_column] > label_threshold, 'class_label'] = 'P'
+    data[CLASS_LABEL]='N'
+    data.loc[data[label_column] > label_threshold, CLASS_LABEL] = 'P'
 
     #Remove a feature if it was too low in 10 or more samples
     if low_num_feature_val_thr is not None \

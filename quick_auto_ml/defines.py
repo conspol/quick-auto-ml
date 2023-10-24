@@ -6,3 +6,5 @@ class LogLevel(Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+CLASS_LABEL = 'class_label'

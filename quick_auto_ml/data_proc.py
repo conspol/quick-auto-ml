@@ -2,7 +2,7 @@ from typing import Union, List
 import pandas as pd
 import numpy as np
 from loguru import logger as lg
-from ..quick_auto_ml.defines import CLASS_LABEL
+from quick_auto_ml.defines import CLASS_LABEL
 
 
 def process_num_df_to_binaryclass(

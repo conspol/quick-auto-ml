@@ -67,6 +67,7 @@ def main(
         label_threshold=cfg_ds.label_threshold,
         low_num_feature_val_thr=cfg_ds.low_num_feature_val_thr,
         low_num_feature_samples_thr=cfg_ds.low_num_feature_samples_thr,
+        sensitivity_thr=cfg_ds.sensitivity_thr,
     )
 
     if cfg_ds.merge_with:

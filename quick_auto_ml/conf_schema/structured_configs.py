@@ -24,7 +24,8 @@ class DataConfig(InputFileConfig):
     label_threshold: Union[int, float] = MISSING
 
     low_num_feature_val_thr: Union[int, float, None] = None
-    low_num_feature_samples_thr: Union[int, None] = None
+    low_num_feature_samples_thr: Optional[int] = None
+    sensitivity_thr: Union[int, float, None] = None
     features_to_drop: Optional[List[str]] = None
 
     merge_data: List[MergeWithConfig] = field(default_factory=list)

@@ -37,7 +37,7 @@ def get_num_features_data(
         )
 
     num_data = data.select_dtypes(include=[np.number])
-    num_data = num_data[num_data.columns.difference([exclude_from_filter])]
+    num_data = num_data[num_data.columns.difference([*exclude_from_filter])]
     return num_data
 
 

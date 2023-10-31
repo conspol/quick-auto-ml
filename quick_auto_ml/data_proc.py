@@ -1,13 +1,16 @@
-from typing import Union, List
-import pandas as pd
+from typing import List, Optional, Union
+
 import numpy as np
+import pandas as pd
 from loguru import logger as lg
+
 from quick_auto_ml.defines import CLASS_LABEL
 
 
-def _get_num_features_data(
+def get_num_features_data(
     data: pd.DataFrame,
-    label_column: str,
+    label_column: Optional[str] = None,
+    preserve_label: bool = True,
 ) -> pd.DataFrame:
     """
     Returns a DataFrame with numeric features only.
@@ -19,8 +22,22 @@ def _get_num_features_data(
     label_column : str
         Name of the column containing labels (to be preserved).
     """
+    if label_column is not None:
+        if preserve_label:
+            exclude_from_filter = [label_column]
+        else:
+            lg.warning(
+                "Label column specified, but `preserve_label` is False; "
+                "label column will be filtered out."
+            )
+            exclude_from_filter = []
+    elif preserve_label:
+        raise ValueError(
+            "If `preserve_label` is True, `label_column` must be specified."
+        )
+
     num_data = data.select_dtypes(include=[np.number])
-    num_data = num_data[num_data.columns.difference([label_column])]
+    num_data = num_data[num_data.columns.difference([exclude_from_filter])]
     return num_data
 
 
@@ -79,7 +96,7 @@ def process_num_df_to_binaryclass(
         if low_num_feature_val_thr is not None \
                 and low_num_feature_samples_thr is not None:
 
-            num_data = _get_num_features_data(
+            num_data = get_num_features_data(
                 data=data,
                 label_column=label_column,
             )
@@ -107,7 +124,7 @@ def process_num_df_to_binaryclass(
 
     if sensitivity_thr is not None:
         if num_data is None:
-            num_data = _get_num_features_data(
+            num_data = get_num_features_data(
                 data=data,
                 label_column=label_column,
             )

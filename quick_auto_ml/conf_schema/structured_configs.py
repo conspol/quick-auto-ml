@@ -8,8 +8,9 @@ from omegaconf import MISSING
 @dataclass
 class InputFileConfig:
     input_file: str = MISSING
-    input_file_type: str = 'xlsx'
+    input_file_type: str = 'excel'
     input_file_sheet_name: str = MISSING
+    index_column: int = 0
     skiprows: int = 0
     skipfooter: int = 0
 
@@ -25,7 +26,7 @@ class DataConfig(InputFileConfig):
 
     low_num_feature_val_thr: Union[int, float, None] = None
     low_num_feature_samples_thr: Optional[int] = None
-    sensitivity_thr: Union[int, float, None] = None
+    sensitivity_thr: Optional[Union[int, float]] = None
     features_to_drop: Optional[List[str]] = None
 
     merge_data: List[MergeWithConfig] = field(default_factory=list)

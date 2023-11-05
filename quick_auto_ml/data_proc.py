@@ -112,12 +112,8 @@ def process_num_df_to_binaryclass(
 
     num_data = None
 
-    if low_num_feature_val_thr is not None \
-            or low_num_feature_samples_thr is not None:
-
-        if low_num_feature_val_thr is not None \
-                and low_num_feature_samples_thr is not None:
-
+    if low_num_feature_val_thr or low_num_feature_samples_thr:
+        if low_num_feature_val_thr and low_num_feature_samples_thr:
             num_data = get_num_features_data(
                 data=data,
                 label_column=label_column,
@@ -132,7 +128,7 @@ def process_num_df_to_binaryclass(
             ].index.to_list()
 
             data.drop(filtered_features, axis=1, inplace=True)
-            lg.debug(
+            lg.info(
                 f"Filtered features with too many low-valued samples: "
                 f"{filtered_features}"
             )
@@ -144,7 +140,7 @@ def process_num_df_to_binaryclass(
                 "skipping filtration."
             )
 
-    if sensitivity_thr is not None:
+    if sensitivity_thr:
         if num_data is None:
             num_data = get_num_features_data(
                 data=data,

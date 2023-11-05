@@ -7,6 +7,28 @@ from loguru import logger as lg
 from quick_auto_ml.defines import CLASS_LABEL
 
 
+def load_dataframe(cfg_file: InputFileConfig) -> pd.DataFrame:
+    """
+    Loads the data from the input file.
+    **Only `.xlsx` files are supported for now.**
+
+    Parameters
+    ----------
+    cfg_file : InputFileConfig
+        The input file configuration.
+    """
+    data = pd.read_excel(
+        cfg_file.input_file,
+        index_col=cfg_file.index_column,
+        sheet_name=cfg_file.input_file_sheet_name,
+        skiprows=cfg_file.skiprows,
+        skipfooter=cfg_file.skipfooter,
+    )
+    data.columns = data.columns.str.strip()
+
+    return data
+
+
 def get_num_features_data(
     data: pd.DataFrame,
     label_column: Optional[str] = None,

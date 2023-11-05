@@ -36,7 +36,10 @@ class TrainConfig:
 
 @dataclass
 class AppConfig:
-    random_seed: int = 42
     log_level: LogLevel = LogLevel.INFO
     data: DataConfig = field(default_factory=DataConfig)
     train: TrainConfig = field(default_factory=TrainConfig)
+
+    random_seed: Optional[int] = None
+    change_nested_random_seeds: bool = True
+

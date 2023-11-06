@@ -1,9 +1,15 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
 from loguru import logger as lg
+from sklearn.model_selection import train_test_split
 
+from quick_auto_ml.conf_schema.structured_configs import (
+    DataConfig,
+    InputFileConfig,
+    MergeWithConfig,
+)
 from quick_auto_ml.defines import CLASS_LABEL
 
 
@@ -88,7 +94,8 @@ def process_num_df_to_binaryclass(
     low_num_feature_val_thr : Union[float, int], optional
         Value below which a feature is considered low.
     low_num_feature_samples_thr : int, optional
-        Minimum number of samples with low value for feature to be considered for removal.
+        Minimum number of samples with low value for feature to be considered
+        for removal.
     sensitivity_thr : Union[float, int], optional
         Threshold below which a feature is considered zero.
     drop_null_label_samples : bool, default True
@@ -152,3 +159,137 @@ def process_num_df_to_binaryclass(
         data[zero_vals_samples] = 0
 
     return data
+
+
+def merge_data(
+    data: pd.DataFrame,
+    merge_cfg: MergeWithConfig,
+) -> pd.DataFrame:
+    """
+    Merges the data from another file.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input dataframe.
+    merge_cfg : MergeWithConfig
+        The configuration for merging the data.
+    """
+    data2merge = load_dataframe(cfg_file=merge_cfg)
+
+    data2merge = data2merge[merge_cfg.features_to_add]
+    data = data.join(data2merge, how=merge_cfg.how)
+
+    lg.info(
+        f"Merged columns: {data2merge.columns.to_list()}\n"
+        f"\tfrom file {merge_cfg.input_file}\n"
+        f"\tfrom sheet {merge_cfg.input_file_sheet_name}"
+    )
+
+    return data
+
+
+def prepare_data(
+    data: pd.DataFrame,
+    cfg_ds: DataConfig,
+) -> pd.DataFrame:
+    """
+    Prepares the data for training: drops features, converts numeric labels,
+    merges data from other files.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input dataframe.
+    cfg_ds : DictConfig
+        The dataset configuration.
+    """
+    if cfg_ds.features_to_drop:
+        data.drop(cfg_ds.features_to_drop, axis=1, inplace=True)
+
+    data = process_num_df_to_binaryclass(
+        data=data,
+        label_column=cfg_ds.label_column,
+        label_threshold=cfg_ds.label_threshold,
+        low_num_feature_val_thr=cfg_ds.low_num_feature_val_thr,
+        low_num_feature_samples_thr=cfg_ds.low_num_feature_samples_thr,
+        sensitivity_thr=cfg_ds.sensitivity_thr,
+        drop_null_label_samples=cfg_ds.drop_null_label_samples,
+    )
+
+    if cfg_ds.merge_data:
+        for merge_cfg in cfg_ds.merge_data:
+            data = merge_data(data=data, merge_cfg=merge_cfg)
+
+    return data
+
+
+def prepare_test_train(
+    data: pd.DataFrame,
+    cfg_ds: DataConfig,
+):
+    """
+    Splits the data into training and testing sets.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input dataframe.
+    cfg_ds : DataConfig
+        The dataset configuration.
+    """
+    if cfg_ds.test_data:
+        config_options = [
+            cfg_ds.test_data.file,
+            cfg_ds.test_data.index_file,
+            cfg_ds.test_data.split,
+        ]
+        config_count = sum(1 for option in config_options if option)
+
+        if config_count > 1:
+            raise ValueError("Multiple `test_data` configurations provided. "
+                             "Please specify only one.")
+
+        if cfg_ds.test_data.file:
+            raise NotImplementedError(
+                "Loading test data from file is not fully implemented yet."
+            )
+            data_test = load_dataframe(cfg_file=cfg_ds.test_data.file)
+            data_train = data
+            lg.info(
+                f"Loaded test data from file: "
+                f"{cfg_ds.test_data.file.input_file}"
+            )
+
+        elif cfg_ds.test_data.index_file:
+            test_indices = load_dataframe(cfg_file=cfg_ds.test_data.index_file)
+            test_indices = test_indices.index
+            data_train = data.loc[~data.index.isin(test_indices)]
+            data_test = data.loc[data.index.isin(test_indices)]
+            lg.info(
+                f"Train-test split according to indices taken from file: "
+                f"{cfg_ds.test_data.index_file.input_file}\n"
+                f"from sheet: {cfg_ds.test_data.index_file.input_file_sheet_name}"
+            )
+            lg.info(
+                f"Train size: {len(data_train)}; test size: {len(data_test)}"
+            )
+
+            lg.debug(f"Test indices: {data_test.index.to_list()}")
+
+        elif cfg_ds.test_data.split:
+            data_train, data_test = train_test_split(
+                data,
+                test_size=cfg_ds.test_data.split.test_size,
+                random_state=cfg_ds.test_data.split.random_seed,
+                stratify=data[cfg_ds.test_data.split.stratify_by],
+            )
+        else:
+            raise ValueError("No proper `test_data` configuration specified.")
+
+    else:
+        data_train = data
+        data_test = None
+        lg.info("No test data specified; using all data for training.")
+
+    return data_train, data_test

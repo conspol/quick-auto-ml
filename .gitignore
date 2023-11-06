@@ -2,7 +2,8 @@
 __pycache__
 data/*
 !data/test_data.xlsx
-quick_auto_ml/conf/_private_config.yaml
+quick_auto_ml/conf/*/_private_*
+quick_auto_ml/conf/_private_*
 /*.png
 run.py
 /outputs

@@ -20,6 +20,18 @@ class MergeWithConfig(InputFileConfig):
     how: str = 'left'
 
 @dataclass
+class TestDataSplitConfig:
+    test_size: float = 0.2  # Portion of the data to be used for testing
+    random_seed: Optional[int] = None
+    stratify_by: Optional[str] = None
+
+@dataclass
+class TestDataConfig:
+    split: Optional[TestDataSplitConfig] = None
+    file: Optional[InputFileConfig] = None
+    index_file: Optional[InputFileConfig] = None
+
+@dataclass
 class DataConfig(InputFileConfig):
     label_column: str = MISSING
     label_threshold: Union[int, float] = MISSING
@@ -30,6 +42,9 @@ class DataConfig(InputFileConfig):
     features_to_drop: Optional[List[str]] = None
 
     merge_data: List[MergeWithConfig] = field(default_factory=list)
+    drop_null_label_samples: bool = True
+
+    test_data: Optional[TestDataConfig] = None
 
 @dataclass
 class TrainConfig:

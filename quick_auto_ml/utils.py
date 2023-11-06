@@ -77,3 +77,34 @@ def _propagate_value_in_nested_dict_dfs(
             f"{changed_dicts}; left random in: {unchanged_dicts}")
 
 
+def process_same_file_cfgs(config: DataConfig) -> None:
+    for merge_cfg in config.merge_data:
+        _process_same_file_cfg(merge_cfg, config)
+
+    if config.test_data is not None:
+        for k_, cfg_ in config.test_data.items():
+            cfg_obj_ = OmegaConf.to_object(cfg_) if cfg_ else None
+            if isinstance(cfg_obj_, InputFileConfig):
+                _process_same_file_cfg(cfg_, config)
+
+
+def _process_same_file_cfg(
+    child_cfg: InputFileConfig,
+    parent_cfg: InputFileConfig,
+) -> None:
+    if child_cfg.input_file == CFGOPT_FILE_SAME:
+        child_cfg.input_file = parent_cfg.input_file
+        child_cfg.input_file_type = parent_cfg.input_file_type
+
+        if (child_cfg.input_file_sheet_name == CFGOPT_FILE_SHEET_SAME
+            or child_cfg.input_file_sheet_name is None):
+            child_cfg.input_file_sheet_name = parent_cfg.input_file_sheet_name
+            child_cfg.skiprows = parent_cfg.skiprows
+            child_cfg.skipfooter = parent_cfg.skipfooter
+
+    elif child_cfg.input_file_sheet_name == CFGOPT_FILE_SHEET_SAME:
+        raise ValueError(
+            "The `input_file_sheet_name` cannot be set to "
+            f"`{CFGOPT_FILE_SHEET_SAME}` if the `input_file` is not set to "
+            f"`{CFGOPT_FILE_SAME}`. "
+        )

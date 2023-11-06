@@ -11,3 +11,4 @@ CLASS_LABEL = 'class_label'
 
 ROOT_CONFIG_NAME = 'AppConfig'
 
+CFGOPT_FILE_SAME = CFGOPT_FILE_SHEET_SAME = 'same'

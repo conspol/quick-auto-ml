@@ -8,3 +8,6 @@ class LogLevel(Enum):
     CRITICAL = "CRITICAL"
 
 CLASS_LABEL = 'class_label'
+
+ROOT_CONFIG_NAME = 'AppConfig'
+

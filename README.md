@@ -1,5 +1,5 @@
 # Intro
-AutoML for binary classification.  
+AutoML for binary classification. Work in progress.
 Uses H2O AutoML and Hydra for configs.
 
 OmegaConf's Structured Configs are used mainly as a schema for yaml files validation.

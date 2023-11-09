@@ -227,16 +227,43 @@ def prepare_data(
 def prepare_test_train(
     data: pd.DataFrame,
     cfg_ds: DataConfig,
-):
+) -> (pd.DataFrame, Union[pd.DataFrame, None]):
     """
-    Splits the data into training and testing sets.
+    Conducts the train-test split of a dataframe as per the `cfg_ds` configurations.
+
+    The function allows for three distinct methods of splitting, mutually exclusive:
+    - `split`: Parameters defined for `train_test_split` function of sklearn.
+    - `index_file`: A file with indices designating the test dataset.
+    - `file`: A direct file input for the test data - *not implemented yet*.
+
+    If no `test_data` configurations are given, defaults to utilizing all data 
+    as the training set.
 
     Parameters
     ----------
     data : pd.DataFrame
-        The input dataframe.
+        The input dataframe to be split.
     cfg_ds : DataConfig
-        The dataset configuration.
+        An object that contains the configuration for the test data, including:
+        - `split`: The proportion and parameters for the split.
+        - `index_file`: The path and specifications of the file containing 
+            test indices.
+        - `file`: The path and specifications for the file to load test data from
+            (*Not Implemented yet*).
+
+    Returns
+    -------
+    data_train : pd.DataFrame
+        The training set derived from the input data.
+    data_test : pd.DataFrame or None
+        The testing set derived from the input data or None if no test data
+        configuration is specified.
+
+    Raises
+    ------
+    ValueError
+        If multiple test_data configurations are provided or if no proper
+        configuration is specified.
     """
     if cfg_ds.test_data:
         config_options = [
@@ -250,6 +277,7 @@ def prepare_test_train(
             raise ValueError("Multiple `test_data` configurations provided. "
                              "Please specify only one.")
 
+        # TODO: test data preparation from file
         if cfg_ds.test_data.file:
             raise NotImplementedError(
                 "Loading test data from file is not fully implemented yet."

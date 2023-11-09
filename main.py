@@ -87,8 +87,6 @@ def main(
     lg.debug("Processed dataframe:")
     lg.debug(f"\n{data}")
 
-    # TODO: test data preparation (split, from file, ...)
-
     train_df, test_df = prepare_test_train(
         data=data,
         cfg_ds=cfg_ds,

@@ -1,5 +1,6 @@
 from typing import Any, List, Union
 
+from hydra.core.config_store import ConfigStore
 from loguru import logger as lg
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
@@ -16,6 +17,14 @@ from quick_auto_ml.defines import (
 
 _DictType = Union[dict, DictConfig]
 _ListType = Union[list, ListConfig]
+
+
+def register_base_config():
+    """
+    A mandatory function for Hydra to use the Structured Config schema.
+    """
+    config_store = ConfigStore.instance()
+    config_store.store(name='base_config', node=AppConfig)
 
 
 def process_random_seeds(config: AppConfig):

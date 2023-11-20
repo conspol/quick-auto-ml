@@ -1,5 +1,8 @@
-from typing import Any, List, Union
+import sys
+from pathlib import Path
+from typing import Any, List, Tuple, Union
 
+import pandas as pd
 from hydra.core.config_store import ConfigStore
 from loguru import logger as lg
 from omegaconf import DictConfig, ListConfig, OmegaConf
@@ -9,6 +12,11 @@ from quick_auto_ml.conf_schema.structured_configs import (
     DataConfig,
     InputFileConfig,
 )
+from quick_auto_ml.data_proc import (
+    load_dataframe,
+    prepare_data,
+    prepare_test_train,
+)
 from quick_auto_ml.defines import (
     CFGOPT_FILE_SAME,
     CFGOPT_FILE_SHEET_SAME,
@@ -17,6 +25,59 @@ from quick_auto_ml.defines import (
 
 _DictType = Union[dict, DictConfig]
 _ListType = Union[list, ListConfig]
+
+
+def setup_initial(
+    cfg: AppConfig,
+) -> None:
+    lg.debug(f"\n{OmegaConf.to_yaml(cfg)}")
+
+    lg.configure(handlers=[{
+        'sink': sys.stdout,
+        'level': cfg.log_level.name,
+    }])
+
+    # ============= Prepare configs =============
+
+    if cfg.change_nested_random_seeds:
+        process_random_seeds(cfg)
+
+    cfg_ds = cfg.data
+    process_same_file_cfgs(cfg_ds)
+
+    missing_keys = OmegaConf.missing_keys(cfg)
+    if missing_keys:
+        raise RuntimeError(f"Got missing keys in config:\n{missing_keys}")
+    
+    input_file_path = Path(cfg_ds.input_file)
+
+    if (not cfg_ds.input_file_type.lower() == 'excel' 
+        or not input_file_path.suffix == '.xlsx'):
+        raise NotImplementedError(
+            "Only xlsx input files are supported at this time. "
+        )
+
+
+def setup_data(
+    cfg_data: DataConfig,
+) -> Tuple[pd.DataFrame, Tuple[pd.DataFrame, pd.DataFrame]]:
+
+    data = load_dataframe(cfg_file=cfg_data)
+
+    lg.debug("Loaded dataframe:")
+    lg.debug(f"\n{data}")
+
+    data = prepare_data(data=data, cfg_ds=cfg_data)
+
+    lg.debug("Processed dataframe:")
+    lg.debug(f"\n{data}")
+
+    train_df, test_df = prepare_test_train(
+        data=data,
+        cfg_ds=cfg_data,
+    )
+
+    return data, (train_df, test_df)
 
 
 def register_base_config():

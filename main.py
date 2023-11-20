@@ -23,74 +23,18 @@ from quick_auto_ml.covariances import (
     NumpyCov,
     ShrunkCov,
 )
-from quick_auto_ml.data_proc import (
-    get_num_features_data,
-    load_dataframe,
-    prepare_data,
-    prepare_test_train,
-)
 from quick_auto_ml.defines import CLASS_LABEL
 from quick_auto_ml.plots import show_feature_matrix
 from quick_auto_ml.utils import (
-    process_random_seeds,
-    process_same_file_cfgs,
-    register_base_config
+    setup_initial,
+    setup_data,
+    register_base_config,
 )
 
 config_store = ConfigStore.instance()
 config_store.store(name='base_config', node=AppConfig)
 
 
-def setup_initial(
-    cfg: AppConfig,
-) -> None:
-    lg.debug(f"\n{OmegaConf.to_yaml(cfg)}")
-
-    lg.configure(handlers=[{
-        'sink': sys.stdout,
-        'level': cfg.log_level.name,
-    }])
-
-    # ============= Prepare configs =============
-
-    if cfg.change_nested_random_seeds:
-        process_random_seeds(cfg)
-
-    cfg_ds = cfg.data
-    process_same_file_cfgs(cfg_ds)
-
-    missing_keys = OmegaConf.missing_keys(cfg)
-    if missing_keys:
-        raise RuntimeError(f"Got missing keys in config:\n{missing_keys}")
-    
-    input_file_path = Path(cfg_ds.input_file)
-
-    if (not cfg_ds.input_file_type.lower() == 'excel' 
-        or not input_file_path.suffix == '.xlsx'):
-        raise NotImplementedError(
-            "Only xlsx input files are supported at this time. "
-        )
-
-
-def setup_data(cfg):
-    cfg_ds = cfg.data
-
-    data = load_dataframe(cfg_file=cfg_ds)
-
-    lg.debug("Loaded dataframe:")
-    lg.debug(f"\n{data}")
-
-    data = prepare_data(data=data, cfg_ds=cfg_ds)
-
-    lg.debug("Processed dataframe:")
-    lg.debug(f"\n{data}")
-
-    train_df, test_df = prepare_test_train(
-        data=data,
-        cfg_ds=cfg_ds,
-    )
-
-    return data, (train_df, test_df)
 
 
 @hydra.main(
@@ -102,7 +46,7 @@ def main(
     cfg: AppConfig,
 ) -> None:
     setup_initial(cfg)
-    data, (train_df, test_df) = setup_data(cfg)
+    data, (train_df, test_df) = setup_data(cfg.data)
 
     h2o.init(
         nthreads=10,

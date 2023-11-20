@@ -50,6 +50,7 @@ def get_num_features_data(
     label_column : str
         Name of the column containing labels (to be preserved).
     """
+    exclude_from_filter = []
     if label_column is not None:
         if preserve_label:
             exclude_from_filter = [label_column]
@@ -58,7 +59,6 @@ def get_num_features_data(
                 "Label column specified, but `preserve_label` is False; "
                 "label column will be filtered out."
             )
-            exclude_from_filter = []
     elif preserve_label:
         raise ValueError(
             "If `preserve_label` is True, `label_column` must be specified."
